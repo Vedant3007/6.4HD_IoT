@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  # =========================
+  # 1️⃣ IoT Data Simulator
+  # =========================
+  iot-simulator:
+    build: ./iot-simulator
+    container_name: iot-simulator
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_URL=http://backend:5000/data
+    networks:
+      - iotnet
+
+  # =========================
+  # 2️⃣ Backend (Flask API)
+  # =========================
+  backend:
+    build: ./backend
+    container_name: iot-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/iot_data
+    depends_on:
+      - mongo
+    networks:
+      - iotnet
+
+  # =========================
+  # 3️⃣ MongoDB Database
+  # =========================
+  mongo:
+    image: mongo:6.0
+    container_name: iot-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - iotnet
+
+  # =========================
+  # 4️⃣ Dashboard (React App)
+  # =========================
+  dashboard:
+    build: ./dashboard
+    container_name: iot-dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - iotnet
